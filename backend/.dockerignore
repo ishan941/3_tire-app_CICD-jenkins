@@ -1,0 +1,55 @@
+# Node modules - will be installed during build
+node_modules
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Coverage directory used by tools like istanbul
+coverage
+
+# Environment files (should be provided at runtime)
+.env
+.env.local
+.env.development
+.env.production
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git files
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Docker files
+Dockerfile*
+docker-compose*
+
+# Testing files
+test
+tests
+*.test.js
+*.spec.js
+
+# Build artifacts (if any)
+dist
+build
