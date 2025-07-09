@@ -1,7 +1,7 @@
 import express from "express";
 
 // This will help us connect to the database
-import db from "../db/connection.js";
+import { getDB } from "../db/connection.js";
 
 // This help convert the id from string to ObjectId for the _id.
 import { ObjectId } from "mongodb";
@@ -13,19 +13,31 @@ const router = express.Router();
 
 // This section will help you get a list of all the records.
 router.get("/", async (req, res) => {
-  let collection = await db.collection("records");
-  let results = await collection.find({}).toArray();
-  res.send(results).status(200);
+  try {
+    const db = getDB();
+    let collection = db.collection("records");
+    let results = await collection.find({}).toArray();
+    res.send(results).status(200);
+  } catch (err) {
+    console.error("Error fetching records:", err);
+    res.status(500).send("Error fetching records");
+  }
 });
 
 // This section will help you get a single record by id
 router.get("/:id", async (req, res) => {
-  let collection = await db.collection("records");
-  let query = { _id: new ObjectId(req.params.id) };
-  let result = await collection.findOne(query);
+  try {
+    const db = getDB();
+    let collection = db.collection("records");
+    let query = { _id: new ObjectId(req.params.id) };
+    let result = await collection.findOne(query);
 
-  if (!result) res.send("Not found").status(404);
-  else res.send(result).status(200);
+    if (!result) res.send("Not found").status(404);
+    else res.send(result).status(200);
+  } catch (err) {
+    console.error("Error fetching record:", err);
+    res.status(500).send("Error fetching record");
+  }
 });
 
 // This section will help you create a new record.
@@ -36,7 +48,8 @@ router.post("/", async (req, res) => {
       position: req.body.position,
       level: req.body.level,
     };
-    let collection = await db.collection("records");
+    const db = getDB();
+    let collection = db.collection("records");
     let result = await collection.insertOne(newDocument);
     res.send(result).status(204);
   } catch (err) {
@@ -57,7 +70,8 @@ router.patch("/:id", async (req, res) => {
       },
     };
 
-    let collection = await db.collection("records");
+    const db = getDB();
+    let collection = db.collection("records");
     let result = await collection.updateOne(query, updates);
     res.send(result).status(200);
   } catch (err) {
@@ -71,6 +85,7 @@ router.delete("/:id", async (req, res) => {
   try {
     const query = { _id: new ObjectId(req.params.id) };
 
+    const db = getDB();
     const collection = db.collection("records");
     let result = await collection.deleteOne(query);
 

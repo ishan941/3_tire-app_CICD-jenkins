@@ -16,7 +16,7 @@
 # docker inspect <container_id> | grep Health  # Detailed health info
 
 
-# for a mongoDB connection
+# For a mongoDB connection:
 # docker pull mongo:latest
 
 # docker run -d \

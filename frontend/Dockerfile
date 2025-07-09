@@ -13,6 +13,10 @@ FROM node:20-alpine AS builder
 # Set working directory inside the container
 WORKDIR /app
 
+# Set environment variable for production build
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 # Copy package files first for better Docker layer caching
 # This allows Docker to cache npm install step if package.json hasn't changed
 COPY package*.json ./
