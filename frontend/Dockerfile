@@ -69,3 +69,28 @@ EXPOSE 5173
 
 # Start development server with host binding for Docker
 CMD ["npm", "run", "dev"]
+
+
+
+
+
+
+# FROM node:20
+
+# WORKDIR /app
+
+# # Copy package files
+# COPY package*.json ./
+
+# # Install all dependencies including devDependencies
+# RUN npm ci
+
+# # Copy source code
+# COPY . .
+
+# # Expose Vite's default port
+# EXPOSE 5173
+
+# # Start development server with host binding for Docker
+# CMD ["npm", "run", "dev"]
+  
