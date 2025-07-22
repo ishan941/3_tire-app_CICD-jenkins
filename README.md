@@ -222,3 +222,86 @@ For production deployment:
 - Implement proper authentication and authorization
 - Use HTTPS in production with proper SSL certificates
 - Keep Docker images updated with security patches
+
+---
+
+# 🚀 Manual Docker Setup for MongoDB, Backend, and Frontend Services
+
+This project contains three main services:  
+- **MongoDB** for the database  
+- **Backend API** (Node.js)  
+- **Frontend Web App** (e.g., Vite + React/Vue)  
+
+Instead of using `docker-compose`, this guide shows how to run each service manually using Docker commands via the terminal.
+
+---
+
+## 📦 Prerequisites
+
+- Docker installed and running
+
+
+---
+
+## 1️⃣ Create Docker Volumes and Network
+
+```bash
+# Create persistent volumes
+docker volume create mongodb_data
+docker volume create mongodb_config
+
+# Create a custom Docker network
+docker network create app-network
+
+```
+### Start MongoDB Container
+
+```bash
+docker run -d \
+  --name mongodb \
+  --network app-network \
+  -p 27017:27017 \
+  -e MONGO_INITDB_ROOT_USERNAME=root \
+  -e MONGO_INITDB_ROOT_PASSWORD=toor \
+  -e MONGO_INITDB_DATABASE=mydatabase \
+  -v mongodb_data:/data/db \
+  -v mongodb_config:/data/configdb \
+  mongo:7-jammy
+```
+## 2️⃣ Build and Start Backend API
+### Build Backend Image
+```bash
+docker build --target production -t backend-image ./backend
+```
+### Run Backend Container
+```bash
+docker run -d \
+  --name backend \
+  --network app-network \
+  -p 5050:5050 \
+  -e PORT=5050 \
+  -e NODE_ENV=production \
+  -e MONGO_URI='mongodb://root:toor@mongodb:27017/mydatabase?authSource=admin' \
+  backend-image
+```
+---
+
+# 4️⃣ Build and Start Frontend Web App
+
+### Build Frontend Image
+
+```bash
+docker build --target production -t frontend-image \
+  --build-arg VITE_API_URL=http://localhost:5050 ./frontend
+
+```
+
+### Run Frontend Container
+
+```bash
+docker run -d \
+  --name frontend \
+  --network app-network \
+  -p 5173:5173 \
+  frontend-image
+```
