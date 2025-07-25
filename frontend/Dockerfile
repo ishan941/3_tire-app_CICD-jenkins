@@ -1,102 +1,85 @@
-# # For Production:
-# # docker build --target production -t frontend-prod .
-# # docker run -p 80:80 frontend-prod
+# =============================================================================
+# Frontend React/Vite Multi-Stage Dockerfile
+# =============================================================================
+# This Dockerfile creates optimized images for both production and development
+# Usage with Docker Compose:
+#   - Production: docker-compose up (uses 'production' target, serves via Nginx)
+#   - Development: docker-compose -f docker-compose.dev.yml up (uses 'development' target, Vite dev server)
 
-# # For Development:
-# # docker build --target development -t frontend-dev .
-# # docker run -p 5173:5173 frontend-dev
+# =============================================================================
+# Stage 1: Build Stage
+# =============================================================================
+# This stage compiles the React application into static files
+FROM node:20-alpine AS builder
 
-# # Stage 1: Build stage
-# # Use Node.js Alpine image for smaller size and security
-# FROM node:20-alpine AS builder
-
-# # Set working directory inside the container
-# WORKDIR /app
-
-# # Set environment variable for production build
-# ARG VITE_API_URL
-# ENV VITE_API_URL=$VITE_API_URL
-
-# # Copy package files first for better Docker layer caching
-# # This allows Docker to cache npm install step if package.json hasn't changed
-# COPY package*.json ./
-
-# # Install all dependencies (including devDependencies needed for build)
-# RUN npm ci --only=production=false
-
-# # Copy the entire source code
-# COPY . .
-
-# # Build the application for production
-# # This creates optimized static files in the dist directory
-# RUN npm run build
-
-# # Stage 2: Production stage
-# # Use nginx Alpine image to serve the built static files
-# FROM nginx:alpine AS production
-
-# # Copy the built application from the builder stage
-# # Copy from /app/dist (Vite's default build output) to nginx's html directory
-# COPY --from=builder /app/dist /usr/share/nginx/html
-
-# # Copy custom nginx configuration for better React Router support
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# # Expose port 80 for the web server
-# EXPOSE 80
-
-# # Start nginx server
-# # Nginx runs in the foreground in containers
-# CMD ["nginx", "-g", "daemon off;"]
-
-# # Stage 3: Development stage (optional)
-# # This stage can be used for development with hot reload
-# FROM node:20-alpine AS development
-
-# WORKDIR /app
-
-# # Copy package files
-# COPY package*.json ./
-
-# # Install all dependencies including devDependencies
-# RUN npm ci
-
-# # Copy source code
-# COPY . .
-
-# # Expose Vite's default port
-# EXPOSE 5173
-
-# # Start development server with host binding for Docker
-# CMD ["npm", "run", "dev"]
-
-
-
-
-
-
-FROM node:20
-
-# Use Node.js image for both production and development stages
-# This ensures consistency in the environment
+# Set working directory
 WORKDIR /app
 
-# Set environment variable for production build
+# Accept build argument for API URL configuration
+# This allows different API URLs for different environments
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
+
+# Copy package files first for better Docker layer caching
+# If package.json hasn't changed, Docker can reuse the cached layer
+COPY package*.json ./
+
+# Install all dependencies including devDependencies needed for building
+# React build process requires devDependencies
+RUN npm ci
+
+# Copy all source code
+COPY . .
+
+# Build the React application for production
+# This creates optimized static files in /app/dist
+RUN npm run build
+
+# =============================================================================
+# Stage 2: Production Stage
+# =============================================================================
+# This stage serves the built application using Nginx
+FROM nginx:alpine AS production
+
+# Copy the built React application from builder stage
+# Nginx serves static files from /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy custom Nginx configuration if needed
+# COPY nginx.conf /etc/nginx/nginx.conf
+
+# Expose port 80 for HTTP traffic
+# Nginx default port for serving web content
+EXPOSE 80
+
+# Start Nginx in foreground mode
+# -g daemon off; keeps Nginx running for Docker container
+CMD ["nginx", "-g", "daemon off;"]
+
+# =============================================================================
+# Stage 3: Development Stage
+# =============================================================================
+# This stage runs Vite development server with hot reload
+FROM node:20-alpine AS development
+
+# Set working directory
+WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
 # Install all dependencies including devDependencies
+# Development needs all packages for hot reload and debugging
 RUN npm ci
 
 # Copy source code
+# In development, source is typically mounted as volume for live changes
 COPY . .
 
-# Expose Vite's default port
+# Expose Vite development server port
+# Vite default development port
 EXPOSE 5173
 
-# Start development server with host binding for Docker
-CMD ["npm", "run", "dev"]
-  
+# Start Vite development server
+# --host 0.0.0.0 allows external connections from Docker host
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

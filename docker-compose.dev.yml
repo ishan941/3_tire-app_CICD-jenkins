@@ -1,0 +1,118 @@
+# =============================================================================
+# Docker Compose - Development Environment
+# =============================================================================
+# This configuration is optimized for development with:
+# - Hot reload for both frontend and backend
+# - Volume mounts for real-time code changes
+# - Development-specific environment variables
+# - Separate containers and networks from production
+#
+# Usage: docker-compose -f docker-compose.dev.yml up -d
+
+services:
+  # =============================================================================
+  # MongoDB Database (Development)
+  # =============================================================================
+  mongodb:
+    image: mongo:7-jammy
+    container_name: mongodb-dev
+    restart: unless-stopped
+    ports:
+      # Expose MongoDB port for external connections (useful for database tools)
+      - "27017:27017"
+    environment:
+      # Database authentication credentials (change in production!)
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: toor
+      MONGO_INITDB_DATABASE: mydatabase
+    volumes:
+      # Persist database data in named volumes (separate from production)
+      - mongodb_data_dev:/data/db
+      - mongodb_config_dev:/data/configdb
+    networks:
+      - app-network-dev
+    healthcheck:
+      # Check if MongoDB is responding to connections
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # =============================================================================
+  # Backend API Service (Development)
+  # =============================================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      # Use development target for hot reload and development tools
+      target: development
+    container_name: backend-dev
+    restart: unless-stopped
+    ports:
+      # Expose backend API port
+      - "5050:5050"
+    environment:
+      # Environment variables for backend configuration
+      PORT: 5050
+      # Connect to MongoDB container using service name
+      MONGO_URI: mongodb://root:toor@mongodb:27017/mydatabase?authSource=admin
+      NODE_ENV: development
+    volumes:
+      # Mount source code for hot reload (changes reflect immediately)
+      - ./backend:/app
+      # Use anonymous volume for node_modules to avoid conflicts
+      - /app/node_modules
+    depends_on:
+      # Wait for MongoDB to be healthy before starting backend
+      mongodb:
+        condition: service_healthy
+    networks:
+      - app-network-dev
+
+  # =============================================================================
+  # Frontend Web Service (Development)
+  # =============================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      # Use development target for Vite dev server with hot reload
+      target: development
+    container_name: frontend-dev
+    restart: unless-stopped
+    ports:
+      # Expose Vite development server port
+      - "5173:5173"
+    environment:
+      # API URL for frontend to connect to backend
+      - VITE_API_URL=http://localhost:5050
+    volumes:
+      # Mount source code for hot reload
+      - ./frontend:/app
+      # Use anonymous volume for node_modules to avoid conflicts
+      - /app/node_modules
+    depends_on:
+      # Start after backend is running
+      - backend
+    networks:
+      - app-network-dev
+
+# =============================================================================
+# Named Volumes (Development)
+# =============================================================================
+# Separate volumes from production to avoid data conflicts
+volumes:
+  mongodb_data_dev:
+    driver: local
+  mongodb_config_dev:
+    driver: local
+
+# =============================================================================
+# Networks (Development)
+# =============================================================================
+# Separate network for development environment
+networks:
+  app-network-dev:
+    driver: bridge

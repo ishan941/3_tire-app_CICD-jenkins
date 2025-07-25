@@ -1,126 +1,87 @@
-# For Production:
-# docker build --target production -t backend-prod .
-# docker run -p 5050:5050 backend-prod
+# =============================================================================
+# Backend Node.js Multi-Stage Dockerfile
+# =============================================================================
+# This Dockerfile creates optimized images for both production and development
+# Usage with Docker Compose:
+#   - Production: docker-compose up (uses 'production' target)
+#   - Development: docker-compose -f docker-compose.dev.yml up (uses 'development' target)
 
-# docker run -p 5050:5050 \
-#   -e PORT=5050 \
-#   -e MONGO_URI=mongodb+srv://root:toor@cluster0.oadytbk.mongodb.net/ \
-#   backend-prod
+# =============================================================================
+# Stage 1: Base Dependencies
+# =============================================================================
+# This stage installs only production dependencies for smaller final image
+FROM node:20-alpine AS dependencies
 
-# # For Development:
-# docker build --target development -t backend-dev .
-# docker run -p 5050:5050 backend-dev
+# Set working directory inside container
+WORKDIR /app
 
-# Check Health:
-# docker ps  # Shows health status
-# docker inspect <container_id> | grep Health  # Detailed health info
+# Copy package.json and package-lock.json first for better caching
+# Docker will cache this layer if dependencies haven't changed
+COPY package*.json ./
 
-# Stage 1: Dependencies stage
-# Use Node.js Alpine image for smaller size and security
-# FROM node:20-alpine AS dependencies
+# Install only production dependencies and clean npm cache
+# --only=production excludes devDependencies for smaller image size
+RUN npm ci --only=production && npm cache clean --force
 
-# # Set working directory
-# WORKDIR /app
+# =============================================================================
+# Stage 2: Production Stage
+# =============================================================================
+# This stage creates the final production image with minimal footprint
+FROM node:20-alpine AS production
 
-# # Copy package files for dependency installation
-# # Copying these first allows Docker to cache this layer if dependencies don't change
-# COPY package*.json ./
+# Create a non-root user for better security
+# Running applications as root is a security risk
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
 
-# # Install only production dependencies
-# # Using npm ci for faster, reliable, reproducible builds
-# RUN npm ci --only=production && npm cache clean --force
+# Set working directory
+WORKDIR /app
 
-# # Stage 2: Build stage (for any build processes if needed in future)
-# FROM node:20-alpine AS builder
+# Copy production dependencies from the dependencies stage
+# This keeps the final image lean by excluding devDependencies
+COPY --from=dependencies /app/node_modules ./node_modules
 
-# WORKDIR /app
+# Copy application source code with proper ownership
+# --chown ensures files are owned by the nodejs user
+COPY --chown=nodejs:nodejs . .
 
-# # Copy package files
-# COPY package*.json ./
+# Switch to non-root user for security
+USER nodejs
 
-# # Install all dependencies (including devDependencies if any build tools are added)
-# RUN npm ci
+# Expose the port that the application runs on
+# This port should match the PORT environment variable
+EXPOSE 5050
 
-# # Copy source code
-# COPY . .
+# Start the Node.js application
+CMD ["npm", "start"]
 
-# # If you have any build steps in the future (like TypeScript compilation), add them here
-# # RUN npm run build
+# =============================================================================
+# Stage 3: Development Stage
+# =============================================================================
+# This stage includes all dependencies and development tools
+FROM node:20-alpine AS development
 
-# # Stage 3: Production stage
-# FROM node:20-alpine AS production
-
-# # Create a non-root user for security
-# RUN addgroup -g 1001 -S nodejs && \
-#     adduser -S nodejs -u 1001
-
-# # Set working directory
-# WORKDIR /app
-
-# # Copy production dependencies from dependencies stage
-# COPY --from=dependencies /app/node_modules ./node_modules
-
-# # Copy application source code
-# COPY --chown=nodejs:nodejs . .
-
-# # Switch to non-root user for security
-# USER nodejs
-
-# # Expose the port the app runs on
-# EXPOSE 5050
-
-# # Add health check to monitor container health
-# HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-#     CMD node -e "const http = require('http'); \
-#     const options = { hostname: 'localhost', port: 5050, path: '/', timeout: 2000 }; \
-#     const req = http.request(options, (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }); \
-#     req.on('error', () => process.exit(1)); \
-#     req.end();"
-
-# # Start the application
-# CMD ["npm", "start"]
-
-# # Stage 4: Development stage (optional for development use)
-# FROM node:20-alpine AS development
-
-# WORKDIR /app
-
-# # Copy package files
-# COPY package*.json ./
-
-# # Install all dependencies including devDependencies
-# RUN npm ci
-
-# # Copy source code
-# COPY . .
-
-# # Expose port for development
-# EXPOSE 5050
-
-# # Use nodemon for development if available, otherwise use npm start
-# CMD ["npm", "start"]
-
-
-
-
-
-
-
-FROM node
-
+# Set working directory
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install all dependencies including devDependencies
+# Install ALL dependencies (including devDependencies for development tools)
 RUN npm ci
 
 # Copy source code
+# In development, we typically mount the source as a volume for hot reload
 COPY . .
 
-# Expose port for development
+# Expose the development port
 EXPOSE 5050
 
-# Use nodemon for development if available, otherwise use npm start
+# Start the application in development mode
+# If you have nodemon installed, you could use: CMD ["npm", "run", "dev"]
 CMD ["npm", "start"]
+
+
+
+
+
