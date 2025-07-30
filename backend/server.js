@@ -18,7 +18,6 @@
 
 import express from "express";
 import { connectToMongo, getDB } from "./db/connection.js";
-import cors from "cors";
 import records from "./routes/record.js";
 import dotenv from "dotenv";
 
@@ -26,21 +25,6 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT;
 
-// Configure CORS for production and development
-const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://localhost',
-    'http://frontend',
-    'http://frontend:80'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
-
-app.use(cors(corsOptions));
 app.use(express.json());
 app.use("/record", records);
 

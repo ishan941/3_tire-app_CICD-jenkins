@@ -43,11 +43,7 @@ services:
   # Backend API Service (Production)
   # =============================================================================
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      # Use production target for optimized, secure image
-      target: production
+    image: rohankhanal14/task-backend:latest
     container_name: backend
     restart: unless-stopped
     ports:
@@ -67,7 +63,13 @@ services:
       - app-network
     healthcheck:
       # Monitor backend API health
-      test: ["CMD", "node", "-e", "const http = require('http'); const options = { hostname: '127.0.0.1', port: 5050, path: '/', timeout: 2000 }; const req = http.request(options, (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }); req.on('error', () => process.exit(1)); req.end();"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "const http = require('http'); const options = { hostname: '127.0.0.1', port: 5050, path: '/', timeout: 2000 }; const req = http.request(options, (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }); req.on('error', () => process.exit(1)); req.end();",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -77,14 +79,7 @@ services:
   # Frontend Web Service (Production)
   # =============================================================================
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      # Use production target for optimized static files served by Nginx
-      target: production
-      args:
-        # Pass API URL for build-time configuration
-        VITE_API_URL: http://localhost:5050
+    image: rohankhanal14/task-frontend:latest
     container_name: frontend
     restart: unless-stopped
     ports:
@@ -98,7 +93,15 @@ services:
       - app-network
     healthcheck:
       # Monitor Nginx web server health
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://127.0.0.1:80",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

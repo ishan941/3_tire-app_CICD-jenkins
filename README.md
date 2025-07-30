@@ -305,3 +305,52 @@ docker run -d \
   -p 5173:5173 \
   frontend-image
 ```
+
+# Simple Deploy Script Usage
+
+## 3-Tier Application Deployment
+
+### Usage:
+
+1. **Deploy Application**
+   ```bash
+   ./deploy.sh           # Deploy with latest tag
+   ./deploy.sh v1.0      # Deploy with specific version
+   ```
+
+2. **Check Status**
+   ```bash
+   ./deploy.sh status
+   ```
+
+3. **Clean Up**
+   ```bash
+   ./deploy.sh clean
+   ```
+
+### What it does:
+- 🏗️ Builds backend and frontend Docker images
+- ⬆️ Pushes images to Docker Hub
+- 📝 Updates Kubernetes manifests
+- ☸️ Deploys to Kubernetes
+- ✅ Shows final status
+
+### Requirements:
+- Docker (logged in to Docker Hub)
+- kubectl (configured with cluster)
+
+### Examples:
+```bash
+# Quick deploy
+./deploy.sh
+
+# Deploy specific version
+./deploy.sh v2.1
+
+# Check what's running
+./deploy.sh status
+
+# Remove everything
+./deploy.sh clean
+```
+

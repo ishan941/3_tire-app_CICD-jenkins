@@ -15,11 +15,6 @@ FROM node:20-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Accept build argument for API URL configuration
-# This allows different API URLs for different environments
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
-
 # Copy package files first for better Docker layer caching
 # If package.json hasn't changed, Docker can reuse the cached layer
 COPY package*.json ./
@@ -45,8 +40,8 @@ FROM nginx:alpine AS production
 # Nginx serves static files from /usr/share/nginx/html
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy custom Nginx configuration if needed
-# COPY nginx.conf /etc/nginx/nginx.conf
+# Copy custom Nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80 for HTTP traffic
 # Nginx default port for serving web content
@@ -60,7 +55,7 @@ CMD ["nginx", "-g", "daemon off;"]
 # Stage 3: Development Stage
 # =============================================================================
 # This stage runs Vite development server with hot reload
-FROM node:20-alpine AS development
+FROM node:20 AS development
 
 # Set working directory
 WORKDIR /app
