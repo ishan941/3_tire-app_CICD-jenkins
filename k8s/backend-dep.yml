@@ -1,0 +1,43 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: task-backend-deployment
+  namespace: task-app
+
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: task-backend
+      tier: backend
+
+  template:
+    metadata:
+      name: task-backend-deployment-pod
+      labels:
+        app: task-backend
+        tier: backend
+
+    spec:
+      containers:
+        - name: task-backend
+          image: rohankhanal14/task-backend:cleanup
+          ports:
+            - containerPort: 5050
+          env:
+            - name: PORT
+              value: "5050"
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: connection-string
+            - name: NODE_ENV
+              value: "production"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"

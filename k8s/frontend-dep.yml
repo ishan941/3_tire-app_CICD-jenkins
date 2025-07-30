@@ -1,0 +1,31 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: task-frontend-deployment
+  namespace: task-app
+  
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: task-frontend
+
+  template:
+    metadata:
+      name: task-frontend-deployment-pod
+      labels:
+        app: task-frontend
+
+    spec:
+      containers:
+        - name: task-frontend
+          image: rohankhanal14/task-frontend:cleanup
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
