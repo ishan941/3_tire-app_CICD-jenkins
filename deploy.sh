@@ -14,11 +14,14 @@ deploy() {
     echo "☸️ Deploying to Kubernetes..."
     kubectl apply -f k8s/ns.yml
     kubectl apply -f k8s/secrets.yml
+    kubectl apply -f k8s/configmap.yml
     kubectl apply -f k8s/backend-dep.yml
     kubectl apply -f k8s/backend-svc.yml
     kubectl apply -f k8s/frontend-dep.yml
     kubectl apply -f k8s/frontend-svc.yml
     kubectl apply -f k8s/ingress.yml
+    kubectl apply -f k8s/backend-hpa.yml
+    kubectl apply -f k8s/frontend-hpa.yml
     
     # Show status
 

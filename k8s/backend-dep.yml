@@ -26,14 +26,20 @@ spec:
             - containerPort: 5050
           env:
             - name: PORT
-              value: "5050"
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: PORT
             - name: MONGO_URI
               valueFrom:
                 secretKeyRef:
                   name: mongodb-secret
                   key: connection-string
             - name: NODE_ENV
-              value: "production"
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: NODE_ENV
           resources:
             requests:
               memory: "128Mi"
