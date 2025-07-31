@@ -3,21 +3,16 @@ apiVersion: apps/v1
 metadata:
   name: task-backend-deployment
   namespace: task-app
-
 spec:
   replicas: 2
   selector:
     matchLabels:
       app: task-backend
-      tier: backend
-
   template:
     metadata:
       name: task-backend-deployment-pod
       labels:
         app: task-backend
-        tier: backend
-
     spec:
       containers:
         - name: task-backend
@@ -30,20 +25,20 @@ spec:
                 configMapKeyRef:
                   name: app-config
                   key: PORT
-            - name: MONGO_URI
-              valueFrom:
-                secretKeyRef:
-                  name: mongodb-secret
-                  key: connection-string
             - name: NODE_ENV
               valueFrom:
                 configMapKeyRef:
                   name: app-config
                   key: NODE_ENV
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: connection-string
           resources:
-            requests:
-              memory: "128Mi"
-              cpu: "100m"
             limits:
               memory: "256Mi"
               cpu: "500m"
+            requests:
+              memory: "128Mi"
+              cpu: "200m"

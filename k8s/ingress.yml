@@ -7,24 +7,20 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
-  
   rules:
     - http:
         paths:
-          # Frontend routes
-          - path: /
-            pathType: Prefix
+          - pathType: Prefix
+            path: /
             backend:
               service:
                 name: frontend
                 port:
                   number: 80
-          # API routes - proxy to backend
-          - path: /api
-            pathType: Prefix
+          - pathType: Prefix
+            path: /api
             backend:
               service:
                 name: backend
                 port:
                   number: 5050
-

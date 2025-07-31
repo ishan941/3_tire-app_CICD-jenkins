@@ -3,4 +3,4 @@ kind: Namespace
 metadata:
   name: task-app
   labels:
-    name: task-app
+    app: task-app

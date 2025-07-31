@@ -3,8 +3,6 @@ kind: Service
 metadata:
   name: frontend
   namespace: task-app
-  labels:
-    app: task-frontend
 spec:
   selector:
     app: task-frontend

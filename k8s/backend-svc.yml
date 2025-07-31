@@ -3,13 +3,9 @@ kind: Service
 metadata:
   name: backend
   namespace: task-app
-  labels:
-    app: task-backend
-    tier: backend
 spec:
   selector:
     app: task-backend
-    tier: backend
   ports:
     - name: http
       port: 5050

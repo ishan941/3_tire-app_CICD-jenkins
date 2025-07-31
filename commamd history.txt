@@ -1,0 +1,39 @@
+git status
+ 1957  clear
+ 1958  mkdir k8s
+ 1959  cd k8s/
+ 1960  touch ns.yml
+ 1961  clear
+ 1962  echo "mongodb+srv://root:toor@cluster0.oadytbk.mongodb.net/" | base64
+ 1963  clear
+ 1964  ls -l
+ 1965  cd ..
+ 1966  ls -l
+ 1967  clear
+ 1968  ./deploy.sh
+ 1969  clear
+ 1970  minikkube start
+ 1971  minikube start
+ 1972  minikube enable addons ingress
+ 1973  minikube addons enable ingress
+ 1974  minikube addons enable metric-server
+ 1975  minikube addons enable metrics-server
+ 1976  clear
+ 1977  ./deploy.sh
+ 1978  clear
+ 1979  ./deploy.sh status
+ 1980  ./deploy.sh pf
+ 1981  ls
+ 1982  minikube dashboard
+ 1983  ./test-hpa.sh monitor
+ 1984  watch kubectl get pods -n task-app
+ 1985  kubectl top pods -n task-app
+ 1986  kubectl clear
+ 1987  clear
+ 1988  ls
+ 1989  ./test-hpa.sh help
+ 1990  cat test-hpa.sh
+ 1991  ./test-hpa.sh full-test
+ 1992  ./test-hpa.sh clean
+ 1993  ./test-hpa.sh cleanup
+ 1994  ./test-hpa.sh status
